@@ -1,0 +1,87 @@
+---
+f_generate_search_path:
+  ros__parameters:
+    type: system
+    parts:
+      f_generate_search_path_node
+    modes:
+      __DEFAULT__:
+        f_generate_search_path_node: active.__DEFAULT__
+      fd_spiral_high:
+        f_generate_search_path_node: active.fd_spiral_high
+      fd_spiral_low:
+        f_generate_search_path_node: active.fd_spiral_low
+      fd_spiral_medium:
+        f_generate_search_path_node: active.fd_spiral_medium
+      fd_unground:
+        f_generate_search_path_node: inactive
+
+f_generate_search_path_node:
+  ros__parameters:
+    type: node
+    modes:
+      __DEFAULT__:
+        ros__parameters:
+          spiral_altitude: 1.0
+      fd_spiral_high:
+        ros__parameters:
+          spiral_altitude: 3.0
+      fd_spiral_medium:
+        ros__parameters:
+          spiral_altitude: 2.0
+      fd_spiral_low:
+        ros__parameters:
+          spiral_altitude: 1.0
+
+f_follow_pipeline:
+  ros__parameters:
+    type: system
+    parts:
+      f_follow_pipeline_node
+    modes:
+      __DEFAULT__:
+        f_follow_pipeline_node: inactive
+      fd_follow_pipeline:
+        f_follow_pipeline_node: active.__DEFAULT__
+      fd_unground:
+        f_follow_pipeline_node: inactive
+
+f_follow_pipeline_node:
+  ros__parameters:
+    type: node
+    modes:
+      __DEFAULT__:
+        ros__parameters:
+          random_param: 2.0
+
+f_maintain_motion:
+  ros__parameters:
+    type: system
+    parts:
+      f_maintain_motion_node
+    modes:
+      __DEFAULT__:
+        f_maintain_motion_node: active.__DEFAULT__
+      fd_set_speed_high:
+        f_maintain_motion_node: active.fd_set_speed_high
+      fd_set_speed_medium:
+        f_maintain_motion_node: active.fd_set_speed_medium
+      fd_set_speed_low:
+        f_maintain_motion_node: active.fd_set_speed_low
+
+f_maintain_motion_node:
+  ros__parameters:
+    type: node
+    modes:
+      __DEFAULT__:
+        ros__parameters:
+          speed: 2.0
+      fd_set_speed_high:
+        ros__parameters:
+          speed: 3.0
+      fd_set_speed_medium:
+        ros__parameters:
+          speed: 2.0
+      fd_set_speed_low:
+        ros__parameters:
+          speed: 1.0
