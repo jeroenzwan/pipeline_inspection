@@ -22,7 +22,7 @@ def generate_launch_description():
     suave_ontology_path = os.path.join(
         pkg_suave_metacontrol_path,
         'config',
-        'suave.owl')
+        'suave_mock.owl')
 
     mros2_reasoner_node = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(reasoner_launch_path),

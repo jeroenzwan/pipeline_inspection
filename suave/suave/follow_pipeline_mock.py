@@ -34,8 +34,8 @@ class PipelineFollowerLC(Node):
         self.thread.start()
 
         self.get_path_timer = self.create_rate(5)
-        self.get_path_service = self.create_client(
-            GetPath, 'pipeline/get_path')
+        # self.get_path_service = self.create_client(
+        #     GetPath, 'pipeline/get_path')
 
         self.pipeline_inspected_pub = self.create_lifecycle_publisher(
             Bool, 'pipeline/inspected', 10)
@@ -46,10 +46,10 @@ class PipelineFollowerLC(Node):
 
     def on_activate(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info("on_activate() is called.")
-        if not self.get_path_service.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info(
-                'pipeline/get_path service is not available')
-            return TransitionCallbackReturn.FAILURE
+        # if not self.get_path_service.wait_for_service(timeout_sec=1.0):
+        #     self.get_logger().info(
+        #         'pipeline/get_path service is not available')
+        #     return TransitionCallbackReturn.FAILURE
         if self.executor is None:
             self.get_logger().info('Executor is None')
             return TransitionCallbackReturn.FAILURE
@@ -81,44 +81,44 @@ class PipelineFollowerLC(Node):
     def follow_pipeline(self):
         self.get_logger().info("Follow pipeline started")
 
-        pipe_path = self.get_path_service.call_async(GetPath.Request())
+        # pipe_path = self.get_path_service.call_async(GetPath.Request())
 
-        timer = self.ardusub.create_rate(5)  # Hz
-        while not pipe_path.done():
-            if self.abort_follow is True:
-                return
-            timer.sleep()
+        timer = self.ardusub.create_rate(0.2)  # Hz
+        # while not pipe_path.done():
+        #     if self.abort_follow is True:
+        #         return
+        timer.sleep()
 
-        last_point = None
-        self.distance_inspected = 0
-        for gz_pose in pipe_path.result().path.poses:
-            if self.abort_follow is True:
-                return
-            setpoint = self.ardusub.setpoint_position_gz(
-                gz_pose, fixed_altitude=True)
+        # last_point = None
+        # self.distance_inspected = 0
+        # for gz_pose in pipe_path.result().path.poses:
+        #     if self.abort_follow is True:
+        #         return
+        #     setpoint = self.ardusub.setpoint_position_gz(
+        #         gz_pose, fixed_altitude=True)
 
-            count = 0
-            while not self.ardusub.check_setpoint_reached_xy(setpoint, 0.4):
-                if self.abort_follow is True:
-                    self.distance_inspected += self.calc_distance(
-                        last_point, self.ardusub.local_pos)
-                    dist = Float32()
-                    dist.data = self.distance_inspected
-                    self.pipeline_distance_inspected_pub.publish(dist)
-                    return
-                if count > 10:
-                    setpoint = self.ardusub.setpoint_position_gz(
-                        gz_pose, fixed_altitude=True)
-                count += 1
-                timer.sleep()
+        #     count = 0
+        #     while not self.ardusub.check_setpoint_reached_xy(setpoint, 0.4):
+        #         if self.abort_follow is True:
+        #             self.distance_inspected += self.calc_distance(
+        #                 last_point, self.ardusub.local_pos)
+        #             dist = Float32()
+        #             dist.data = self.distance_inspected
+        #             self.pipeline_distance_inspected_pub.publish(dist)
+        #             return
+        #         if count > 10:
+        #             setpoint = self.ardusub.setpoint_position_gz(
+        #                 gz_pose, fixed_altitude=True)
+        #         count += 1
+        #         timer.sleep()
 
-            if last_point is not None:
-                self.distance_inspected += self.calc_distance(
-                    last_point, setpoint)
-                dist = Float32()
-                dist.data = self.distance_inspected
-                self.pipeline_distance_inspected_pub.publish(dist)
-            last_point = setpoint
+        #     if last_point is not None:
+        #         self.distance_inspected += self.calc_distance(
+        #             last_point, setpoint)
+        #         dist = Float32()
+        #         dist.data = self.distance_inspected
+        #         self.pipeline_distance_inspected_pub.publish(dist)
+        #     last_point = setpoint
 
         pipe_inspected = Bool()
         pipe_inspected.data = True

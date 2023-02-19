@@ -6,6 +6,7 @@ from rclpy.lifecycle import Node
 from rclpy.lifecycle import Publisher
 from rclpy.lifecycle import State
 from rclpy.lifecycle import TransitionCallbackReturn
+from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult
 
 
 from diagnostic_msgs.msg import DiagnosticArray
@@ -16,10 +17,29 @@ from rcl_interfaces.msg import ParameterType
 from rcl_interfaces.srv import SetParameters
 
 
-class RecoverThrustersLC(Node):
+class MaintainMotionLC(Node):
     def __init__(self, node_name, **kwargs):
         super().__init__(node_name, **kwargs)
+
+        speed_descriptor = ParameterDescriptor(
+            description='Sets the speed of the UUV.')
+        self.declare_parameter(
+            'speed', 2.0, speed_descriptor)
+
+        self.param_change_callback_handle = \
+            self.add_on_set_parameters_callback(self.param_change_callback)
+
         self.trigger_configure()
+
+    def param_change_callback(self, parameters):
+        result = SetParametersResult()
+        result.successful = True
+        for parameter in parameters:
+            self.get_logger().info(
+                "parameter '{}' is now: {}".format(
+                    parameter.name,
+                    parameter.value))
+        return result
 
     def on_configure(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info('on_configure() is called.')
@@ -29,7 +49,6 @@ class RecoverThrustersLC(Node):
 
     def on_activate(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info("on_activate() is called.")
-        self.executor.create_task(self.recover_thrusters)
         return super().on_activate(state)
 
     def on_deactivate(self, state: State) -> TransitionCallbackReturn:
@@ -51,47 +70,13 @@ class RecoverThrustersLC(Node):
         future = service.call_async(request)
         return future
 
-    def recover_thrusters(self):
-        publish_rate = self.create_rate(4)
-        rate = self.create_rate(0.1)
-        rate.sleep()
-        for thruster in range(1, 7):
-            parameter = Parameter()
-            parameter.name = 'SERVO' + str(thruster) + '_FUNCTION'
-            parameter.value.type = ParameterType.PARAMETER_INTEGER
-            parameter.value.integer_value = thruster + 32
-
-            req = SetParameters.Request()
-            req.parameters.append(parameter)
-
-            self.call_service(
-                SetParameters, 'mavros/param/set_parameters', req)
-
-            key_value = KeyValue()
-            key_value.key = 'c_thruster_{}'.format(thruster)
-            key_value.value = 'RECOVERED'
-
-            status_msg = DiagnosticStatus()
-            status_msg.level = DiagnosticStatus.OK
-            status_msg.name = ''
-            status_msg.message = 'Component status'
-            status_msg.values.append(key_value)
-
-            diag_msg = DiagnosticArray()
-            diag_msg.header.stamp = self.get_clock().now().to_msg()
-            diag_msg.status.append(status_msg)
-
-            # TODO: wait service to complete to send component state
-            self.diagnostics_publisher.publish(diag_msg)
-            publish_rate.sleep()
-        self.get_logger().info("Thrusters recovered!")
 
 
 def main():
     rclpy.init(args=sys.argv)
-    recover_thrusters_node = RecoverThrustersLC('f_maintain_motion_node')
+    maintain_motion_node = MaintainMotionLC('f_maintain_motion_node')
     mt_executor = MultiThreadedExecutor()
-    rclpy.spin(recover_thrusters_node, mt_executor)
+    rclpy.spin(maintain_motion_node, mt_executor)
     rclpy.shutdown()
 
 

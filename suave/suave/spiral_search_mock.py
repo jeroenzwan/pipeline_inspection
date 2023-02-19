@@ -39,6 +39,7 @@ class SpiralSearcherLC(Node):
         self.count = 0
         self.z_delta = 0
         self.old_spiral_altitude = -1
+        self.abort_search = False
 
         super().__init__(node_name, **kwargs)
 
@@ -64,55 +65,6 @@ class SpiralSearcherLC(Node):
                     parameter.value))
         return result
 
-    def publish(self):
-        if self._enabled is True:
-            self.spiral_altitude = self.get_parameter(
-                    'spiral_altitude').get_parameter_value().double_value
-
-            if self.old_spiral_altitude != self.spiral_altitude:
-                self.spiral_count += 1
-
-            self.old_spiral_altitude = self.spiral_altitude
-            fov = math.pi/3
-            pipe_z = 0.5
-            spiral_width = 2.0*self.spiral_altitude*math.tan(fov/2)
-
-            altitude_bug = False
-            if self.goal_setpoint is not None and self.count > 10:
-                altitude_bug = self.ardusub.check_setpoint_reached_xy(self.goal_setpoint, 0.4) \
-                    and (not self.ardusub.check_setpoint_reached(self.goal_setpoint, 0.4))
-
-            if self.count > 10:
-                if altitude_bug is True:
-                    self.z_delta -= 0.5
-                self.ardusub.altitude = self.spiral_altitude + self.z_delta
-                self.ardusub.setpoint_position_local(
-                    self.spiral_x, self.spiral_y, fixed_altitude=True)
-                self.count = 0
-
-            if self.goal_setpoint is None or \
-               self.ardusub.check_setpoint_reached(self.goal_setpoint, 0.4):
-
-                x, y = spiral_points(
-                    self.spiral_count,
-                    self.spiral_x,
-                    self.spiral_y,
-                    resolution=0.1,
-                    spiral_width=spiral_width)
-                self.get_logger().info(
-                        'setpoint_postion_local value {0}, {1}'.format(x, y))
-
-                self.ardusub.altitude = self.spiral_altitude + self.z_delta
-                self.goal_setpoint = self.ardusub.setpoint_position_local(
-                    x, y, fixed_altitude=True)
-                if self.goal_setpoint is not None:
-                    self.goal_setpoint.pose.position.z -= self.z_delta
-                    self.spiral_count += 1
-                    self.spiral_x = x
-                    self.spiral_y = y
-                self.count = 0
-            else:
-                self.count += 1
 
     def on_configure(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info('on_configure() is called.')
@@ -122,12 +74,21 @@ class SpiralSearcherLC(Node):
             target=rclpy.spin, args=(self.ardusub, ), daemon=True)
         self.thread.start()
 
-        self._timer_ = self.create_timer(self.timer_period, self.publish)
+        self.detect_pipeline_pub = self.create_publisher(
+            Bool, 'pipeline/detected', 10)
         return TransitionCallbackReturn.SUCCESS
 
     def on_activate(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info("on_activate() is called.")
         self._enabled = True
+
+        if self.executor is None:
+            self.get_logger().info('Executor is None')
+            return TransitionCallbackReturn.FAILURE
+        else:
+            self.executor.create_task(self.search_pipeline)
+            self.abort_search = False
+
         return super().on_activate(state)
 
     def on_deactivate(self, state: State) -> TransitionCallbackReturn:
@@ -149,6 +110,20 @@ class SpiralSearcherLC(Node):
         self.get_logger().info('on_shutdown() is called.')
         return TransitionCallbackReturn.SUCCESS
 
+    def search_pipeline(self):
+        self.get_logger().info("Search pipeline started")
+        timer = self.ardusub.create_rate(0.2)  # Hz
+        timer.sleep()
+
+        pipe_found = Bool()
+        pipe_found.data = True
+        self.pipeline_found.publish(pipe_found)
+        self.get_logger().info("Search pipeline completed")
+
+    def calc_distance(self, pose1, pose2):
+        return math.sqrt(
+            (pose1.pose.position.x - pose2.pose.position.x)**2 +
+            (pose1.pose.position.y - pose2.pose.position.y)**2)
 
 def main():
     rclpy.init()
