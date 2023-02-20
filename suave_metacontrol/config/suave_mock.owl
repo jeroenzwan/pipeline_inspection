@@ -22,6 +22,26 @@
     <!-- 
     ///////////////////////////////////////////////////////////////////////////////////////
     //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://www.metacontrol.org/suave#requiresF -->
+
+    <owl:ObjectProperty rdf:about="http://www.metacontrol.org/suave#requiresF">
+        <rdfs:domain rdf:resource="http://metacontrol.org/tomasys#FunctionDesign"/>
+        <rdfs:range rdf:resource="http://metacontrol.org/tomasys#Function"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
     // Individuals
     //
     ///////////////////////////////////////////////////////////////////////////////////////
@@ -123,16 +143,6 @@
     <!-- http://www.metacontrol.org/suave#fd_generate_recharge_wp -->
 
     <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#fd_generate_recharge_wp">
-        <rdf:type rdf:resource="http://metacontrol.org/tomasys#FunctionDesign"/>
-        <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_recharge_efficiency"/>
-        <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_go_to_recharge_waypoints"/>
-    </owl:NamedIndividual>
-    
-
-
-    <!-- http://www.metacontrol.org/suave#fd_recharge -->
-
-    <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#fd_recharge">
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#FunctionDesign"/>
         <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_recharge_efficiency"/>
         <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_go_to_recharge_waypoints"/>
