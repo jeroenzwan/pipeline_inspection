@@ -154,7 +154,7 @@ def main():
     rclpy.init()
 
     executor = rclpy.executors.MultiThreadedExecutor()
-    lc_node = SpiralSearcherLC('f_generate_search_path_node')
+    lc_node = SpiralSearcherLC('f_search_pipeline_wp_node')
     executor.add_node(lc_node)
     try:
         executor.spin()

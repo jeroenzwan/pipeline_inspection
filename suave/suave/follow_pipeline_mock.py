@@ -135,7 +135,7 @@ def main():
     rclpy.init()
 
     executor = rclpy.executors.MultiThreadedExecutor()
-    lc_node = PipelineFollowerLC('f_follow_pipeline_node')
+    lc_node = PipelineFollowerLC('f_follow_pipeline_wp_node')
     executor.add_node(lc_node)
     try:
         executor.spin()

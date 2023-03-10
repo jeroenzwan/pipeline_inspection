@@ -98,17 +98,17 @@
     
 
 
-    <!-- http://www.metacontrol.org/suave#f_follow_pipeline_waypoints -->
+    <!-- http://www.metacontrol.org/suave#f_follow_pipeline_wp -->
 
-    <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#f_follow_pipeline_waypoints">
+    <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#f_follow_pipeline_wp">
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#Function"/>
     </owl:NamedIndividual>
     
 
 
-    <!-- http://www.metacontrol.org/suave#f_go_to_recharge_waypoints -->
+    <!-- http://www.metacontrol.org/suave#f_recharge_wp -->
 
-    <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#f_go_to_recharge_waypoints">
+    <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#f_recharge_wp">
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#Function"/>
     </owl:NamedIndividual>
     
@@ -122,9 +122,9 @@
     
 
 
-    <!-- http://www.metacontrol.org/suave#f_search_pipeline_waypoints -->
+    <!-- http://www.metacontrol.org/suave#f_search_pipeline_wp -->
 
-    <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#f_search_pipeline_waypoints">
+    <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#f_search_pipeline_wp">
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#Function"/>
     </owl:NamedIndividual>
     
@@ -135,7 +135,7 @@
     <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#fd_generate_follow_wp">
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#FunctionDesign"/>
         <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_inspect_efficiency_high"/>
-        <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_follow_pipeline_waypoints"/>
+        <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_follow_pipeline_wp"/>
     </owl:NamedIndividual>
     
 
@@ -145,7 +145,7 @@
     <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#fd_generate_recharge_wp">
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#FunctionDesign"/>
         <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_recharge_efficiency"/>
-        <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_go_to_recharge_waypoints"/>
+        <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_recharge_wp"/>
     </owl:NamedIndividual>
     
 
@@ -154,7 +154,7 @@
 
     <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#fd_set_speed_high">
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#FunctionDesign"/>
-        <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_speed_high"/>
+        <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_time_high"/>
         <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_maintain_motion"/>
     </owl:NamedIndividual>
     
@@ -164,7 +164,7 @@
 
     <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#fd_set_speed_low">
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#FunctionDesign"/>
-        <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_speed_low"/>
+        <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_time_low"/>
         <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_maintain_motion"/>
     </owl:NamedIndividual>
     
@@ -174,7 +174,7 @@
 
     <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#fd_set_speed_medium">
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#FunctionDesign"/>
-        <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_speed_medium"/>
+        <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_time_medium"/>
         <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_maintain_motion"/>
     </owl:NamedIndividual>
     
@@ -186,7 +186,7 @@
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#FunctionDesign"/>
         <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_search_efficiency_high"/>
         <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_water_visibility_high"/>
-        <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_search_pipeline_waypoints"/>
+        <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_search_pipeline_wp"/>
     </owl:NamedIndividual>
     
 
@@ -197,7 +197,7 @@
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#FunctionDesign"/>
         <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_search_efficiency_low"/>
         <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_water_visibility_low"/>
-        <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_search_pipeline_waypoints"/>
+        <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_search_pipeline_wp"/>
     </owl:NamedIndividual>
     
 
@@ -208,7 +208,7 @@
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#FunctionDesign"/>
         <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_search_efficiency_medium"/>
         <tomasys:hasQAestimation rdf:resource="http://www.metacontrol.org/suave#qa_water_visibility_medium"/>
-        <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_search_pipeline_waypoints"/>
+        <tomasys:solvesF rdf:resource="http://www.metacontrol.org/suave#f_search_pipeline_wp"/>
     </owl:NamedIndividual>
     
 
@@ -272,9 +272,9 @@
     
 
 
-    <!-- http://www.metacontrol.org/suave#qa_speed_high -->
+    <!-- http://www.metacontrol.org/suave#qa_time_high -->
 
-    <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#qa_speed_high">
+    <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#qa_time_high">
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#QAvalue"/>
         <tomasys:isQAtype rdf:resource="http://ros/mros#performance"/>
         <tomasys:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.0</tomasys:hasValue>
@@ -282,9 +282,9 @@
     
 
 
-    <!-- http://www.metacontrol.org/suave#qa_speed_low -->
+    <!-- http://www.metacontrol.org/suave#qa_time_low -->
 
-    <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#qa_speed_low">
+    <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#qa_time_low">
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#QAvalue"/>
         <tomasys:isQAtype rdf:resource="http://ros/mros#performance"/>
         <tomasys:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</tomasys:hasValue>
@@ -292,9 +292,9 @@
     
 
 
-    <!-- http://www.metacontrol.org/suave#qa_speed_medium -->
+    <!-- http://www.metacontrol.org/suave#qa_time_medium -->
 
-    <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#qa_speed_medium">
+    <owl:NamedIndividual rdf:about="http://www.metacontrol.org/suave#qa_time_medium">
         <rdf:type rdf:resource="http://metacontrol.org/tomasys#QAvalue"/>
         <tomasys:isQAtype rdf:resource="http://ros/mros#performance"/>
         <tomasys:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</tomasys:hasValue>
