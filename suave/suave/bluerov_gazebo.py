@@ -31,6 +31,7 @@ class BlueROVGazebo(BlueROVArduSubWrapper):
                 self.local_pos.pose.position.y - msg.position.y,
                 self.local_pos.pose.position.z - msg.position.z,
             ]
+            self.get_logger().info('x = '+str(self.gz_to_local_pose_delta))
             self.destroy_subscription(self.gazebo_pos_sub)
 
     def convert_gz_to_local_pose(self, gz_pose):
@@ -52,19 +53,30 @@ class BlueROVGazebo(BlueROVArduSubWrapper):
 
         if fixed_altitude:
             gz_pose.position.z = self.ground_depth_gz + self.altitude
-
+        
         local_pose = self.convert_gz_to_local_pose(gz_pose)
         return self.setpoint_position_local(
             x=local_pose.position.x,
             y=local_pose.position.y,
             z=local_pose.position.z)
 
-    def setpoint_position_local(
+    def calc_position_local(
      self, x=.0, y=.0, z=.0, rx=.0, ry=.0, rz=.0, rw=1.0, fixed_altitude=True):
         if fixed_altitude and self.gz_to_local_pose_delta is None:
+            self.get_logger().info('In calc_position_gz, returned')
             return None
 
         if fixed_altitude:
             z = self.ground_depth_gz + self.altitude \
                 + self.gz_to_local_pose_delta[2]
-        return super().setpoint_position_local(x, y, z)
+        self.get_logger().info('calculated x='+str(x)+', y='+str(y)+', z='+str(z))
+        return [x, y, z] 
+    
+    def setpoint_position_local(
+     self, x=.0, y=.0, z=.0, rx=.0, ry=.0, rz=.0, rw=1.0, fixed_altitude=True):
+        xyz = self.calc_position_local(x,y,z,rx,ry,rz,rw,fixed_altitude)
+        if xyz == None:
+            return xyz
+        else:
+            self.get_logger().info('published x='+str(xyz[0])+', y='+str(xyz[1])+', z='+str(xyz[2]))
+            return super().setpoint_position_local(xyz[0],xyz[1],xyz[2])

@@ -28,6 +28,8 @@ setup(
         'console_scripts': [
             'const_dist_mission = ' +
                 'suave_missions.const_dist_mission:main',
+            'start_mission = ' +
+                'suave_missions.start_mission:main',
             'time_constrained_mission = ' +
                 'suave_missions.time_constrained_mission:main',
         ],

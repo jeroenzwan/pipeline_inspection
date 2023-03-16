@@ -87,6 +87,8 @@ class PipelineDetection(Node):
     def compare_poses(self, bluerov_pose, pipe_pose):
         altitude = abs(bluerov_pose.position.z - pipe_pose.position.z)
         delta = altitude * math.tan(self.camera_fov/2)
+        if delta >= 2:
+            delta = 2
         return abs(bluerov_pose.position.x - pipe_pose.position.x) <= delta \
             and abs(bluerov_pose.position.y - pipe_pose.position.y) <= delta
 

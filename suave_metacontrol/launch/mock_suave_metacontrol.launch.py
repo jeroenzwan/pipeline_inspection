@@ -23,7 +23,7 @@ def generate_launch_description():
     mock_launch_path = os.path.join(
         pkg_suave_path,
         'launch',
-        'mock.launch.py')
+        'suave.launch.py')
 
     mock_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(mock_launch_path),

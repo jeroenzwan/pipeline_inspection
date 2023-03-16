@@ -22,14 +22,14 @@ class PipelineDetectionWV(PipelineDetection):
                     if value.key == "water_visibility":
                         self.water_visibility = float(value.value)
 
-    def compare_poses(self, bluerov_pose, pipe_pose):
-        result = False
-        if self.water_visibility is not None:
-            result = super().compare_poses(bluerov_pose, pipe_pose)
-            result = result and \
-                abs(bluerov_pose.position.z - pipe_pose.position.z) \
-                <= self.water_visibility
-        return result
+    # def compare_poses(self, bluerov_pose, pipe_pose):
+    #     result = False
+    #     if self.water_visibility is not None:
+    #         result = super().compare_poses(bluerov_pose, pipe_pose)
+    #         result = result and \
+    #             abs(bluerov_pose.position.z - pipe_pose.position.z) \
+    #             <= self.water_visibility
+    #     return result
 
 
 def main():

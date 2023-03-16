@@ -16,6 +16,7 @@ from suave.bluerov_gazebo import BlueROVGazebo
 
 from std_msgs.msg import Bool
 from std_msgs.msg import Float32
+from geometry_msgs.msg import PoseStamped
 
 
 class PipelineFollowerLC(Node):
@@ -23,8 +24,15 @@ class PipelineFollowerLC(Node):
     def __init__(self, node_name, **kwargs):
         super().__init__(node_name, **kwargs)
         self.trigger_configure()
-        self.abort_follow = False
         self.distance_inspected = 0
+        self.goal_setpoint_local = PoseStamped()
+        self.goal_setpoint_local.pose.position.x = -100.0
+        self.goal_setpoint_local.pose.position.y = -100.0
+        self.goal_setpoint_local.pose.position.z = -100.0
+        self.count = 0
+        self.i = 0
+        self.xyz = None
+        self.height = 3.0
 
     def on_configure(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info("on_configure() is called.")
@@ -42,6 +50,9 @@ class PipelineFollowerLC(Node):
 
         self.pipeline_distance_inspected_pub = self.create_publisher(
             Float32, 'pipeline/distance_inspected', 10)
+
+        self.setpoint_pub = self.create_publisher(
+            PoseStamped, 'maintain_motion/setpoint', 10)
         return TransitionCallbackReturn.SUCCESS
 
     def on_activate(self, state: State) -> TransitionCallbackReturn:
@@ -55,13 +66,11 @@ class PipelineFollowerLC(Node):
             return TransitionCallbackReturn.FAILURE
         else:
             self.executor.create_task(self.follow_pipeline)
-            self.abort_follow = False
 
         return super().on_activate(state)
 
     def on_deactivate(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info("on_deactivate() is called.")
-        self.abort_follow = True
         return super().on_deactivate(state)
 
     def on_cleanup(self, state: State) -> TransitionCallbackReturn:
@@ -80,45 +89,64 @@ class PipelineFollowerLC(Node):
 
     def follow_pipeline(self):
         self.get_logger().info("Follow pipeline started")
+        timer = self.ardusub.create_rate(1)  # Hz
 
-        pipe_path = self.get_path_service.call_async(GetPath.Request())
+        cur_pose = self.ardusub.local_pos.pose
+        self.get_logger().info(str(cur_pose))
+        while (cur_pose.position.x+cur_pose.position.y+cur_pose.position.z) == 0.0:
+            cur_pose = self.ardusub.local_pos.pose
+            self.get_logger().info(str(cur_pose))
+            timer.sleep()
+        self.get_logger().info("After while loop")
 
-        timer = self.ardusub.create_rate(5)  # Hz
+        req = GetPath.Request()
+        pipe_path = self.get_path_service.call_async(req)
+
         while not pipe_path.done():
-            if self.abort_follow is True:
-                return
+            pipe_path = self.get_path_service.call_async(req)
             timer.sleep()
 
-        last_point = None
         self.distance_inspected = 0
-        for gz_pose in pipe_path.result().path.poses:
-            if self.abort_follow is True:
-                return
-            setpoint = self.ardusub.setpoint_position_gz(
-                gz_pose, fixed_altitude=True)
+        self.distance_to_inspect = 5
+        gz_poses = pipe_path.result().path.poses
+        self.get_logger().info('First pose is x='+
+            str(gz_poses[0].position.x)+', y='+str(gz_poses[0].position.y)+
+            ', z='+str(gz_poses[0].position.z))
 
-            count = 0
-            while not self.ardusub.check_setpoint_reached_xy(setpoint, 0.4):
-                if self.abort_follow is True:
-                    self.distance_inspected += self.calc_distance(
-                        last_point, self.ardusub.local_pos)
-                    dist = Float32()
-                    dist.data = self.distance_inspected
-                    self.pipeline_distance_inspected_pub.publish(dist)
-                    return
-                if count > 10:
-                    setpoint = self.ardusub.setpoint_position_gz(
-                        gz_pose, fixed_altitude=True)
-                count += 1
-                timer.sleep()
+        last_point = None
+        self.ardusub.altitude = self.height
+        while self.distance_inspected < self.distance_to_inspect:
+            self.get_logger().info('Distance covered '+str(self.distance_inspected))
+            pose = PoseStamped()
+            pose.pose = gz_poses[self.i]
 
-            if last_point is not None:
-                self.distance_inspected += self.calc_distance(
-                    last_point, setpoint)
-                dist = Float32()
-                dist.data = self.distance_inspected
-                self.pipeline_distance_inspected_pub.publish(dist)
-            last_point = setpoint
+            if self.count > 10:
+                self.count = 0
+                self.setpoint_pub.publish(pose)
+                self.get_logger().info('published x='+
+                    str(pose.pose.position.x)+', y='+str(pose.pose.position.y)+
+                    ', z='+str(pose.pose.position.z))
+                self.count = 0
+
+            if self.xyz == None or self.ardusub.check_setpoint_reached_xy(self.goal_setpoint_local, 0.4):
+                self.xyz = self.ardusub.calc_position_local(pose.pose.position.x,pose.pose.position.y,fixed_altitude=True)
+                self.goal_setpoint_local.pose.position.x = self.xyz[0]
+                self.goal_setpoint_local.pose.position.y = self.xyz[1]
+                self.goal_setpoint_local.pose.position.z = self.xyz[2]
+                pose.pose.position.z = self.height
+                self.setpoint_pub.publish(pose)
+                self.get_logger().info('published x='+
+                    str(pose.pose.position.x)+', y='+str(pose.pose.position.y)+
+                    ', z='+str(pose.pose.position.z))
+                self.count = 0
+                self.i += 1
+                if last_point is not None:
+                    self.distance_inspected += self.calc_distance(last_point, pose)
+                last_point = pose
+            else:
+                self.get_logger().info('added count')
+                self.count += 1
+            timer.sleep()
 
         pipe_inspected = Bool()
         pipe_inspected.data = True

@@ -14,6 +14,8 @@ import std_msgs.msg
 import threading
 import math
 
+from geometry_msgs.msg import PoseStamped
+
 
 def spiral_points(i, old_x, old_y, resolution=0.1, spiral_width=1.0):
     if i == 0:
@@ -31,7 +33,7 @@ class SpiralSearcherLC(Node):
 
     def __init__(self, node_name, **kwargs):
         self._enabled = False
-        self.spiral_count: int = 0
+        self.spiral_count: int = 1
         self.spiral_x: float = 0.0
         self.spiral_y: float = 0.0
         self.timer_period = 1.0
@@ -42,12 +44,24 @@ class SpiralSearcherLC(Node):
 
         super().__init__(node_name, **kwargs)
 
-        self.goal_setpoint = None
+        self.goal_setpoint = PoseStamped()
+        self.goal_setpoint_local = PoseStamped()
+        self.goal_setpoint_local.pose.position.x = -100.0
+        self.goal_setpoint_local.pose.position.y = -100.0
+        self.goal_setpoint_local.pose.position.z = -100.0
+
+        self.xyz = None
+        self.spiral_count_added = False
 
         spiral_altitude_descriptor = ParameterDescriptor(
             description='Sets the spiral altitude of the UUV.')
         self.declare_parameter(
             'spiral_altitude', 2.0, spiral_altitude_descriptor)
+
+        self.ardusub = BlueROVGazebo('bluerov_spiral_search')
+        self.thread = threading.Thread(
+            target=rclpy.spin, args=(self.ardusub, ), daemon=True)
+        self.thread.start()
 
         self.param_change_callback_handle = \
             self.add_on_set_parameters_callback(self.param_change_callback)
@@ -68,30 +82,28 @@ class SpiralSearcherLC(Node):
         if self._enabled is True:
             self.spiral_altitude = self.get_parameter(
                     'spiral_altitude').get_parameter_value().double_value
+            self.get_logger().info('Spiral altitude is ' + str(self.spiral_altitude))
 
-            if self.old_spiral_altitude != self.spiral_altitude:
-                self.spiral_count += 1
-
-            self.old_spiral_altitude = self.spiral_altitude
             fov = math.pi/3
             pipe_z = 0.5
             spiral_width = 2.0*self.spiral_altitude*math.tan(fov/2)
 
-            altitude_bug = False
-            if self.goal_setpoint is not None and self.count > 10:
-                altitude_bug = self.ardusub.check_setpoint_reached_xy(self.goal_setpoint, 0.4) \
-                    and (not self.ardusub.check_setpoint_reached(self.goal_setpoint, 0.4))
-
             if self.count > 10:
-                if altitude_bug is True:
-                    self.z_delta -= 0.5
-                self.ardusub.altitude = self.spiral_altitude + self.z_delta
-                self.ardusub.setpoint_position_local(
-                    self.spiral_x, self.spiral_y, fixed_altitude=True)
+                # self.ardusub.altitude = self.spiral_altitude + self.z_delta
+                # self.ardusub.setpoint_position_local(
+                #     self.spiral_x, self.spiral_y, fixed_altitude=True)
+                self.setpoint_pub.publish(self.goal_setpoint)
+                self.get_logger().info('published x='+str(self.goal_setpoint.pose.position.x)+
+                    ', y='+str(self.goal_setpoint.pose.position.y)+', z='+str(self.goal_setpoint.pose.position.z))
                 self.count = 0
+                self.spiral_count+=1
+                self.spiral_count_added = True
 
-            if self.goal_setpoint is None or \
-               self.ardusub.check_setpoint_reached(self.goal_setpoint, 0.4):
+            if self.spiral_count_added or self.xyz == None or\
+               self.ardusub.check_setpoint_reached_xy(self.goal_setpoint_local, 0.4):
+                self.spiral_count_added = False
+                self.get_logger().info('check setpoint reached is ')
+                self.get_logger().info(str(self.ardusub.check_setpoint_reached_xy(self.goal_setpoint_local, 0.4)))
 
                 x, y = spiral_points(
                     self.spiral_count,
@@ -102,25 +114,31 @@ class SpiralSearcherLC(Node):
                 self.get_logger().info(
                         'setpoint_postion_local value {0}, {1}'.format(x, y))
 
-                self.ardusub.altitude = self.spiral_altitude + self.z_delta
-                self.goal_setpoint = self.ardusub.setpoint_position_local(
-                    x, y, fixed_altitude=True)
-                if self.goal_setpoint is not None:
-                    self.goal_setpoint.pose.position.z -= self.z_delta
+                self.ardusub.altitude = self.spiral_altitude
+                self.goal_setpoint.pose.position.x = x
+                self.goal_setpoint.pose.position.y = y
+                self.goal_setpoint.pose.position.z = self.spiral_altitude
+                self.xyz = self.ardusub.calc_position_local(x,y,fixed_altitude=True)
+                if self.xyz != None:
+                    self.goal_setpoint_local.pose.position.x = self.xyz[0]
+                    self.goal_setpoint_local.pose.position.y = self.xyz[1]
+                    self.goal_setpoint_local.pose.position.z = self.xyz[2]
+                    self.setpoint_pub.publish(self.goal_setpoint)
+                    self.get_logger().info('published x='+
+                        str(self.goal_setpoint.pose.position.x)+', y='+str(self.goal_setpoint.pose.position.y)+
+                        ', z='+str(self.goal_setpoint.pose.position.z))
                     self.spiral_count += 1
                     self.spiral_x = x
                     self.spiral_y = y
-                self.count = 0
+                    self.count = 0
             else:
                 self.count += 1
 
     def on_configure(self, state: State) -> TransitionCallbackReturn:
         self.get_logger().info('on_configure() is called.')
-        self.ardusub = BlueROVGazebo('bluerov_spiral_search')
 
-        self.thread = threading.Thread(
-            target=rclpy.spin, args=(self.ardusub, ), daemon=True)
-        self.thread.start()
+        self.setpoint_pub = self.create_publisher(
+            PoseStamped, 'maintain_motion/setpoint', 10)
 
         self._timer_ = self.create_timer(self.timer_period, self.publish)
         return TransitionCallbackReturn.SUCCESS

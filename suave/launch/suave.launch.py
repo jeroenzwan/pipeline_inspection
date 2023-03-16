@@ -30,10 +30,10 @@ def generate_launch_description():
         executable='pipeline_detection_wv',
     )
 
-    thruster_monitor_node = Node(
+    battery_monitor_node = Node(
         package='suave',
-        executable='thruster_monitor',
-        name='thruster_monitor',
+        executable='battery_monitor',
+        name='battery_monitor',
         parameters=[mission_config]
     )
 
@@ -49,9 +49,16 @@ def generate_launch_description():
         output='screen',
     )
 
-    recover_thrusters_node = Node(
+    maintain_motion_node = Node(
         package='suave',
-        executable='recover_thrusters'
+        executable='maintain_motion',
+        output='screen'
+    )
+
+    recharge_node = Node(
+        package='suave',
+        executable='recharge',
+        output='screen'
     )
 
     pkg_suave_path = get_package_share_directory('suave')
@@ -67,9 +74,10 @@ def generate_launch_description():
     return LaunchDescription([
         water_visibility_node,
         pipeline_detection_wv_node,
-        thruster_monitor_node,
+        battery_monitor_node,
         spiral_search_node,
         follow_pipeline_node,
-        recover_thrusters_node,
+        maintain_motion_node,
+        recharge_node,
         system_modes_launch,
     ])
